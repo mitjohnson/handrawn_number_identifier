@@ -1,10 +1,13 @@
 """
-neural_network.py
+network.py
 
 This module defines a basic implementation of a feedforward neural network.
 """
-from typing import List, Tuple, Optional, Any
+
 import random
+import time
+from typing import List, Tuple, Optional, Any
+
 import numpy as np
 
 class Network(object):
@@ -30,12 +33,6 @@ class Network(object):
     def sigmoid(z: np.ndarray):
         """
         Compute the sigmoid activation function.
-
-        The sigmoid function is defined as:
-            sigmoid(z) = 1 / (1 + exp(-z))
-
-        It maps any real-valued number into the range (0, 1), making it useful for 
-        models where we need to predict probabilities.
         """
         return 1.0/(1.0+np.exp(-z))
 
@@ -55,10 +52,9 @@ class Network(object):
     def feed_forward(self, a: Any):
         """ Return the output of the network is "a" is input """
         for b, w in zip(self.biases, self.weights):
-
-            # activation value for next layer based on the weighted sum + biases.
             a = Network.sigmoid(np.dot(w, a) + b)
-            return a
+
+        return a
 
     def sgd(self, training_data: List[Tuple[np.ndarray, np.ndarray]],
         epochs: int, batch_size: int, eta: float,
@@ -72,22 +68,24 @@ class Network(object):
         """
         if test_data:
             n_test = len(test_data)
+
         n = len(training_data)
 
         for j in range(epochs):
+            time1 = time.time()
             random.shuffle(training_data)
             mini_batches = [
-                training_data[k:k + batch_size]
-                for k in range(0, n, batch_size)
-            ]
-
+                training_data[k:k+batch_size]
+                for k in range(0, n, batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
-
+            time2 = time.time()
             if test_data:
-                print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
+                print(
+                  f"Epoch {j}: {self.evaluate(test_data)} / {n_test}, in {time2-time1:.2f} seconds"
+                )
             else:
-                print(f"Epoch {j} complete")
+                print(f"Epoch {j} complete in {time2-time1:.2f} seconds")
 
     def update_mini_batch(self, mini_batch: List[Tuple[np.ndarray, np.ndarray]], eta: float):
         """
@@ -138,7 +136,7 @@ class Network(object):
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l - 1].transpose())
 
-        return nabla_b, nabla_w
+        return (nabla_b, nabla_w)
 
     def evaluate(self, test_data):
         """
@@ -156,4 +154,4 @@ class Network(object):
         Return the vector of partial derivatives partial C_x 
         partial a for the output activations.
         """
-        return output_activations-y
+        return output_activations - y

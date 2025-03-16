@@ -14,4 +14,24 @@ Now, unfortunately, finding the minimum cost is a bit more complex than repeated
 
 Now all we need to do is calculate the gradient of our cost function, make an adjustment to the weights using gradient descent, and continue this process until we reach a local minimum cost, with the goal of finding the global minimum. Although this is difficult, and in practice, we may only end up reaching a local minimum, we often have no way of knowing whether we are at a global or local minimum.
 
+This is how we do this in [network.py](../network.py)
+
+```python
+def update_mini_batch(self, mini_batch: List[Tuple[np.ndarray, np.ndarray]], eta: float):
+    """
+    Update the network's weights and biases by applying
+    gradient descent using backpropagation to a single mini batch.
+    """
+    nabla_b = [np.zeros(b.shape) for b in self.biases]
+    nabla_w = [np.zeros(w.shape) for w in self.weights]
+    for x, y in mini_batch:
+        delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+        nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
+        nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+    self.weights = [w-(eta/len(mini_batch))*nw
+                    for w, nw in zip(self.weights, nabla_w)]
+    self.biases = [b-(eta/len(mini_batch))*nb
+                    for b, nb in zip(self.biases, nabla_b)]
+```
+
 With the output from this cost function, which we hope is at a local or global minimum, we now have meaningful feedback that we can use in our network to adjust the weights. The gradient of the cost function with respect to each weight tells us how much each weight needs to be adjusted to minimize the cost. This information indicates not only whether a weight should increase or decrease but also the magnitude of the adjustment needed (a larger gradient indicates a larger adjustment) and the direction of the change (positive or negative).
